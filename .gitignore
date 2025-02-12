@@ -1,6 +1,0 @@
-# Ignore everything
-*
-# But don't ignore directories
-!*/
-# Don't ignore Python files
-!*.py
