@@ -1,11 +1,9 @@
 import os
 from PyPDF2 import PdfReader
 import re
-from nltk.tokenize import sent_tokenize
 import nltk
 import spacy
 from nltk.corpus import words
-import language_tool_python
 
 nlp = spacy.load("en_core_web_sm")
 # 下载 nltk 必要的数据
@@ -81,21 +79,31 @@ def custom_sent_tokenize(text):
         '?': 'TEMP_QUESTION_PLACEHOLDER',
         '!': 'TEMP_EXCLAMATION_PLACEHOLDER'
     }
+    reverse_mapping = {v: k for k, v in punctuation_mapping.items()}
 
-    # 识别带()的句子，括号内的标点符号字符都替换为占位符
-    def replace_in_brackets(match):
+    # 处理 No.\d 和 d.\d 形式的文本
+    def replace_in_special_patterns(match):
         content = match.group(0)
         for punc, placeholder in punctuation_mapping.items():
             content = content.replace(punc, placeholder)
         return content
 
-    text = re.sub(r'\(([^)]*)\)', replace_in_brackets, text)
-    text = re.sub(r'No\.\d', replace_in_brackets, text)
-    text = re.sub(r'd\.\d', replace_in_brackets, text)
+    text = re.sub(r'No\.\d', replace_in_special_patterns, text)
+    text = re.sub(r'd\.\d', replace_in_special_patterns, text)
+    # 定义分割句子的正则表达式
+    sentence_end_pattern = r'[.;!?]+'
+    # 分割句子
+    sentences = re.split(sentence_end_pattern, text)
+    # 去除空句子
+    sentences = [sentence.strip() for sentence in sentences if sentence.strip()]
 
+    # 把占位符替换回原来的标点符号
+    def revert_placeholders(sentence):
+        for placeholder, punc in reverse_mapping.items():
+            sentence = sentence.replace(placeholder, punc)
+        return sentence
 
-    # 进行句子分割
-    sentences = sent_tokenize(text)
+    sentences = [revert_placeholders(sentence) for sentence in sentences]
     return sentences
 
 
@@ -105,29 +113,11 @@ def remove_leading_non_letters(s):
     return s
 
 
-def revert_plh(sen):
-    punctuation_mapping = {
-        '.': 'TEMP_DOT_PLACEHOLDER',
-        ',': 'TEMP_COMMA_PLACEHOLDER',
-        '?': 'TEMP_QUESTION_PLACEHOLDER',
-        '!': 'TEMP_EXCLAMATION_PLACEHOLDER'
-    }
-    for punc, placeholder in punctuation_mapping.items():
-        sen = sen.replace(placeholder, punc)
-
-    return sen
-
-
 def save_txt(content, path):
     try:
 
         # 使用自定义的句子分割函数
         sentences = custom_sent_tokenize(content)
-        new_sen = []
-        for sentence in sentences:
-            sentence = revert_plh(sentence)
-            sentence = remove_leading_non_letters(sentence)
-            new_sen.append(sentence)
 
         # 将分割后的有效句子逐行写入输出文件
         with open(path, 'w', encoding='utf-8') as output_file:
@@ -142,7 +132,8 @@ def save_txt(content, path):
 
 def pdf2txt(fname):
     inpath = "/Users/caotony/PycharmProjects/csg_thesis/stage1_text_collection/origin/" + fname
-    outpath = "/Users/caotony/PycharmProjects/csg_thesis/stage1_text_collection/text_split_sentence/" + fname[:-4] + ".txt"
+    outpath = "/Users/caotony/PycharmProjects/csg_thesis/stage1_text_collection/text_in_sentences/" + fname[
+                                                                                                      :-4] + ".txt"
 
     reader = PdfReader(inpath)
 

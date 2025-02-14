@@ -23,24 +23,33 @@ else:
 df_markers["Markers"] = df_markers["Markers"].astype(str)
 marker_list = list(
     set(marker.strip().lower() for sublist in df_markers["Markers"].str.split(',') for marker in sublist))
-
+print(marker_list)
 # Create stance type and construction type dictionaries
 stance_dict = {}
 construction_dict = {}
+def find_stance_type(input_marker):
+    for index, row in df_markers.iterrows():
+        submarkers = [s.strip() for s in str(row['Markers']).split(',')]
+        if input_marker in submarkers:
+            return row['Stance Type']
+    return None
+def find_construction_type(input_marker):
+    for index, row in df_markers.iterrows():
+        submarkers = [s.strip() for s in str(row['Markers']).split(',')]
+        if input_marker in submarkers:
+            return row['Construction Type']
+    return None
 
-for _, row in df_markers.iterrows():
-    markers = [m.strip().lower() for m in row["Markers"].split(',')]
-    stance_type = row["Stance Type"]
-    construction_type = row["Construction Type"]
+for marker in marker_list:
+    stance_dict[marker] = find_stance_type(marker)
+    construction_dict[marker] = find_construction_type(marker)
 
-    for marker in markers:
-        stance_dict[marker] = stance_type
-        construction_dict[marker] = construction_type
-
+print(stance_dict)
+print(construction_dict)
 # Count marker frequency in the text using regex for exact word matches
 marker_counts = Counter()
 for marker in marker_list:
-    pattern = r'(?<!\w)' + re.escape(marker) + r'(?!\w)'
+    pattern = rf'\b{re.escape(marker)}\b'
     marker_counts[marker] = len(re.findall(pattern, text, flags=re.IGNORECASE))
 
 # Create result DataFrame
