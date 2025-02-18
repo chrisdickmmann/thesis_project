@@ -4,7 +4,7 @@ import re
 from collections import Counter
 
 # Load the list of stance markers
-df_markers = pd.read_csv('/Users/caotony/PycharmProjects/csg_thesis/stage2_data_processing/get_valid_marker/(used)LGSWE_markers.csv')
+df_markers = pd.read_csv('/Users/caotony/PycharmProjects/csg_thesis/stage2_data_processing/get_valid_marker/Fuoli_based_markers.csv')
 
 # Placeholder for text file path (update as needed)
 text_file_path = "/Users/caotony/PycharmProjects/csg_thesis/stage2_data_processing/get_txt/all_cor_21-23.txt"
